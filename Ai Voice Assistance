@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Assistant with Web Search</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f4f8;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      text-align: center;
+      background: #ffffff;
+      border: 1px solid #ddd;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      width: 400px;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #response {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>AI Voice Assistant</h1>
+    <button id="start-btn">Start Listening</button>
+    <p id="response"></p>
+  </div>
+  <script>
+    document.getElementById("start-btn").addEventListener("click", () => {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      const synth = window.speechSynthesis;
+
+      recognition.lang = "en-US";
+      recognition.interimResults = false;
+
+      recognition.onstart = () => {
+        document.getElementById("response").textContent = "Listening...";
+      };
+
+      recognition.onresult = async (event) => {
+        const spokenText = event.results[0][0].transcript.toLowerCase();
+        document.getElementById("response").textContent = `You said: "${spokenText}"`;
+
+        try {
+          const reply = await fetchAnswerFromWeb(spokenText);
+
+          const utterance = new SpeechSynthesisUtterance(reply);
+          synth.speak(utterance);
+          document.getElementById("response").textContent += `\nResponse: "${reply}"`;
+        } catch (error) {
+          const errorMessage = "I encountered an error while fetching the answer.";
+          const utterance = new SpeechSynthesisUtterance(errorMessage);
+          synth.speak(utterance);
+          document.getElementById("response").textContent = errorMessage;
+        }
+      };
+
+      recognition.onerror = (event) => {
+        document.getElementById("response").textContent = `Error occurred: ${event.error}`;
+      };
+
+      recognition.onend = () => {
+        document.getElementById("response").textContent += "\nReady for another question.";
+      };
+
+      recognition.start();
+    });
+
+    async function fetchAnswerFromWeb(question) {
+      // Mock API call for the demonstration
+      const mockAPIResponse = {
+        "what is your name": "I am your AI Voice Assistant.",
+        "what is the capital of france": "The capital of France is Paris.",
+        "tell me a joke": "Why did the scarecrow win an award? Because he was outstanding in his field!",
+      };
+
+      // Simulate API response
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(mockAPIResponse[question] || "I couldn't find an answer to your question.");
+        }, 1000);
+      });
+    }
+  </script>
+</body>
+</html>
